@@ -1,0 +1,24 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "ingen_genes"
+version = "${file.jarVersion}"
+displayName = "InGen Genes"
+description = "Simulacao de genetica de dinossauros - piloto DNA Extractor (1.21.1)."
+authors = "Noar1625"
+
+[[dependencies.ingen_genes]]
+    modId = "neoforge"
+    type = "required"
+    versionRange = "[21.1,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.ingen_genes]]
+    modId = "minecraft"
+    type = "required"
+    versionRange = "[1.21.1,1.22)"
+    ordering = "NONE"
+    side = "BOTH"

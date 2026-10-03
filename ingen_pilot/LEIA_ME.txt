@@ -1,0 +1,87 @@
+=== InGen Genes - Piloto DNA Extractor (Minecraft 1.21.1) ===
+
+O QUE É ISTO
+Este NÃO é o mod completo. É um piloto isolado: um projeto Gradle real
+(NeoForge + Fabric, via Architectury) contendo só a máquina DNA Extractor
+funcional, pra provar que o pipeline de build local funciona antes de
+migrar o resto do mod (dinos, genética) pra cá. Nada do código 1.20.1
+atual foi tocado.
+
+COMO GERAR O .JAR
+
+OPÇÃO 1 (recomendada): tem Docker instalado?
+  Linux/Mac: ./build-docker.sh
+  Windows:   clique 2x em build-docker.bat
+  A primeira vez baixa ~800MB-1GB (Minecraft + NeoForge + Fabric +
+  Architectury) e pode levar 15-25 minutos. As próximas são rápidas.
+
+OPÇÃO 2: tem Java 21 instalado? (https://adoptium.net -> Temurin 21)
+  Linux/Mac: ./build-native.sh
+  Windows:   clique 2x em build-native.bat
+
+IMPORTANTE — TESTE UM LOADER DE CADA VEZ
+Os dois scripts compilam primeiro só o NeoForge, depois o Fabric.
+Se algo falhar, teste o JAR do NeoForge no jogo ANTES de mexer no Fabric
+— isso isola se o problema é no código em si (afeta os dois) ou
+específico de um loader.
+
+  build-output/neoforge/ingen_genes-neoforge-1.1.40+1.21.1.jar
+  build-output/fabric/ingen_genes-fabric-1.1.40+1.21.1.jar
+  (na mesma pasta tambem vao aparecer -dev.jar, -dev-shadow.jar e
+   -sources.jar — são intermediários do build, ignora esses; o dev.bat
+   já ignora sozinho e pega o certo.)
+
+(Precisa do NeoForge 21.1.x instalado, ou do Fabric Loader 0.16.9+
+com Fabric API na pasta mods/, dependendo de qual JAR for testar.)
+
+O QUE TESTAR NO JOGO
+1. Craftar o DNA Extractor: 6x Ferro (borda) + 2x Vidro + 1x Redstone (meio),
+   formato 3x3 igual ao já usado no projeto antigo.
+2. Pegar um Dinosaur Fossil e um Extraction Buffer via /give:
+   /give @s ingen_genes:dinosaur_fossil
+   /give @s ingen_genes:extraction_buffer
+3. Colocar o bloco, clicar com botão direito, abrir a GUI, colocar fossil
+   no slot de cima e buffer no de baixo. Depois de ~10s deve sair uma
+   Raw DNA Sample no slot da direita.
+
+SE DER ERRO DE COMPILAÇÃO — o que é mais provável de precisar ajuste
+Eu escrevi este código sem conseguir compilar contra as bibliotecas reais
+(NeoForge/Fabric/Architectury não são baixáveis daqui). É bem mais seguro
+que o esquema antigo de patch em bytecode, mas ainda é "revisado, não
+testado". Os pontos com mais chance de precisar de um ajuste pequeno:
+
+| Erro | Causa provável | Onde olhar |
+|---|---|---|
+| `Could not find net.neoforged:neoforge:X` (versão existe de verdade no maven-metadata.xml oficial) | Faltava o repositório `maven.neoforged.net/releases` no bloco `repositories{}` de dependências (só estava listado pra resolver *plugin*, lista separada) | Já corrigido nesta versão |
+| `cannot find symbol: EventBuses` (pacote `dev.architectury.platform.forge`) | Essa classe não existe nessa versão do Architectury — o registro do event bus no NeoForge é automático, não precisa de chamada manual | Já corrigido nesta versão: removi o import e a chamada de `EventBuses.registerModEventBus(...)` — o `InGenGenes.init()` sozinho já basta |
+| `register(MenuType,ScreenConstructor) has private access in MenuScreens` | Chamar `net.minecraft.client.gui.screens.MenuScreens.register(...)` direto não funciona bem com o `MenuType` criado via `MenuRegistry.ofExtended` do Architectury | Já corrigido nesta versão: uso `dev.architectury.registry.menu.MenuRegistry.registerScreenFactory(...)` em vez do `MenuScreens.register(...)` vanilla (nos dois loaders) |
+| `X is not abstract and does not override abstract method codec() in BaseEntityBlock` | Desde ~1.21, todo bloco (BaseEntityBlock incluso) precisa de um `MapCodec` próprio | Já corrigido nesta versão: `DNAExtractorBlock` agora tem `CODEC = simpleCodec(DNAExtractorBlock::new)` + override de `codec()` |
+| `method builder in class CreativeModeTab cannot be applied to given types` | `CreativeModeTab.builder()` passou a exigir `(Row, int)` — a posição da aba | Já corrigido nesta versão: `CreativeModeTab.builder(CreativeModeTab.Row.TOP, 0)` |
+| `package dev.architectury.registry.registry does not exist` / `cannot find symbol: DeferredRegister`/`RegistrySupplier` | Erro de digitação no pacote — escrevi `registry.registry` (repetido) em vez de `registry.registries` (plural) | Já corrigido nesta versão em todos os arquivos de `common/src/.../registry/` |
+| `Could not find net.neoforged:neoforge:X` mesmo com o maven do NeoForge no build.gradle raiz | O repositório declarado no bloco `subprojects{}` compartilhado não é considerado pela configuração especial `neoForge` do Loom | Já corrigido nesta versão: repositório do NeoForge declarado direto dentro de `neoforge/build.gradle`, não só no raiz |
+| `Could not find dev.architectury:architectury-api:X` (com ou sem classificador) | O nome do artefato está errado — não existe `architectury-api` publicado, o nome certo é `architectury` (common) / `architectury-fabric` / `architectury-neoforge` (por loader), sem classificador | Já corrigido nesta versão (confirmado na documentação oficial atual do Architectury) |
+| `Configuration with name 'compileClasspath' not found` (erro no common/build.gradle) | `architectury-plugin` incompatível com o Architectury Loom atual — não é problema de versão, é o pacote em si | Já corrigido nesta versão: removi o `architectury-plugin` de vez, uso `loom.platform=neoforge`/`fabric` (arquivo `gradle.properties` dentro de cada pasta de loader) + `loom { mods { main { sourceSet ... } } }` no `build.gradle` raiz |
+| `cannot find symbol: MenuRegistry`/`DeferredRegister` | Faltava a dependência `dev.architectury:architectury-api` no `common/build.gradle` | Já corrigido nesta versão |
+| `You are using an outdated version of Gradle (X). Gradle 8.11 or higher is required` | O `gradle-wrapper.properties` está pinado numa versão do Gradle mais velha do que o plugin do Architectury Loom exige | Já corrigido nesta versão (Gradle 8.14.3) |
+| `cannot find symbol: MenuRegistry.ofExtended` | Nome do método mudou entre versões do Architectury | registry/ModMenuTypes.java |
+| `Unsupported class file major version` | Java errado (precisa 21, não 17) | rode `java -version` |
+| `Could not resolve dev.architectury:architectury` | Sem internet no build, ou proxy corporativo | use build-docker em vez de build-native |
+| `neoforge.mods.toml` não carrega o mod | modId diferente entre @Mod e o .toml | InGenGenesNeoForge.java vs neoforge.mods.toml |
+| GUI abre em branco/preta | textura não encontrada (`dna_extractor.png`) | assets/ingen_genes/textures/gui/ |
+
+Se dor de cabeça: me manda o log de build (`build-neoforge.log` ou
+`build-fabric.log`, gerados na mesma pasta) que eu ajusto direto no
+código-fonte, sem precisar do zoológico de bytecode patching de antes.
+
+PRÓXIMOS PASSOS (depois que isso funcionar)
+- Sequencer, Incubator, Gene Splicer — mesmo padrão, um de cada vez.
+- Decisão separada: portar o código 1.20.1 (dinos/genética) pra este
+  projeto, ou manter os dois JARs coexistindo por enquanto.
+
+BUILD NA NUVEM (CircleCI) - alternativa sem Java/Docker no PC
+1. Crie um repositorio no GitHub e suba TODO o conteudo da pasta
+   ingen_pilot (inclusive as pastas .circleci e .github).
+2. No CircleCI: Projects -> Set Up Project -> escolha o repositorio
+   (use o config que ja esta no repo, branch main).
+3. Os .jar prontos ficam na aba "Artifacts" do job. Se falhar, o log
+   do job mostra o erro - o Claude consegue ler pelo conector.

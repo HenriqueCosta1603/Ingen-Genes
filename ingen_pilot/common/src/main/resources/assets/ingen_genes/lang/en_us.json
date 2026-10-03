@@ -1,0 +1,7 @@
+{
+  "block.ingen_genes.dna_extractor": "DNA Extractor",
+  "item.ingen_genes.dinosaur_fossil": "Dinosaur Fossil",
+  "item.ingen_genes.extraction_buffer": "Extraction Buffer",
+  "item.ingen_genes.raw_dna_sample": "Raw DNA Sample",
+  "itemGroup.ingen_genes.main_tab": "InGen Genes"
+}

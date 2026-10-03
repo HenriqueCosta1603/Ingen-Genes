@@ -1,0 +1,5 @@
+dependencies {
+    // Nome certo do artefato (confirmado na doc oficial): "architectury",
+    // NAO "architectury-api" - esse ultimo nao existe publicado.
+    modCompileOnly "dev.architectury:architectury:${architectury_version}"
+}

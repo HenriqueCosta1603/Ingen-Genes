@@ -1,0 +1,31 @@
+name: Build Mod
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+      - name: Build NeoForge
+        run: ./gradlew :neoforge:build --no-daemon
+      - name: Build Fabric
+        run: ./gradlew :fabric:build --no-daemon
+      - name: Upload NeoForge JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingen_genes-neoforge
+          path: neoforge/build/libs/*.jar
+      - name: Upload Fabric JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingen_genes-fabric
+          path: fabric/build/libs/*.jar

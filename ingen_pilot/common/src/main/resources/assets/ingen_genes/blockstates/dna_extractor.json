@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "ingen_genes:block/dna_extractor" },
+    "facing=south": { "model": "ingen_genes:block/dna_extractor", "y": 180 },
+    "facing=west":  { "model": "ingen_genes:block/dna_extractor", "y": 270 },
+    "facing=east":  { "model": "ingen_genes:block/dna_extractor", "y": 90 }
+  }
+}

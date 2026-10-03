@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "ingen_genes",
+  "version": "${version}",
+  "name": "InGen Genes",
+  "description": "Simulacao de genetica de dinossauros - piloto DNA Extractor (1.21.1).",
+  "authors": ["Noar1625"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.ingen.ingengenes.fabric.InGenGenesFabric"],
+    "client": ["com.ingen.ingengenes.fabric.InGenGenesFabricClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}

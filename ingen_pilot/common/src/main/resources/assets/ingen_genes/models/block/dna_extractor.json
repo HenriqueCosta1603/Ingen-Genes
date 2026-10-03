@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "particle": "ingen_genes:block/dna_extractor_side",
+    "bottom": "ingen_genes:block/dna_extractor_bottom",
+    "top": "ingen_genes:block/dna_extractor_top",
+    "side": "ingen_genes:block/dna_extractor_side"
+  }
+}
